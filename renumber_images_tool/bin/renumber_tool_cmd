@@ -1,0 +1,81 @@
+#!/usr/bin/env python
+
+import argparse
+import glob
+import math
+import os
+import re
+import sys
+
+
+def get_sequence_regex(folder_path):
+    """This generates a list of image regex.
+    Frames are replaced with the wildcard for finding the same sequence pattern.
+    """
+    if not os.path.isdir(folder_path):
+        raise OSError('[{}] does not exist.'.format(folder_path))
+
+    seq_regex_set = set()
+    image_list = os.listdir(folder_path)
+    for image in image_list:
+        if os.path.isfile(os.path.join(folder_path, image)):
+            regex = re.compile('[0-9]+')
+            replaced_filename = regex.sub('*', image)
+            regex_filepath = os.path.join(folder_path, replaced_filename)
+            seq_regex_set.add(regex_filepath)
+
+    return list(seq_regex_set)
+
+def rename_files(input_path, dry_run=False):
+    """Re-number the file on disk for each sequence
+
+    Args:
+        folder_path (str): directory path to images
+        dry_run (int): print out info only
+    """
+    seq_regex_list = get_sequence_regex(input_path)
+
+    if dry_run:
+        message = '\n### This is a dryrun. Please run again without dryrun flag to execute. ###\n\n' \
+                  'Find images in: {0}\n' \
+                  'Found {1} Sequences: {2}\n'.format(input_path, len(seq_regex_list), seq_regex_list)
+        print(message)
+
+    for seq_pattern in seq_regex_list:
+        same_seq_list = glob.glob(seq_pattern)
+        same_seq_list.sort()
+
+        # padding is based on the length of sequence. minimum is 2 digits.
+        if int(math.log10(len(same_seq_list)) + 1) < 2:
+            padding = '%02d'
+        else:
+            padding = '%0{}d'.format(int(math.log10(len(same_seq_list))+1))
+
+        for image in same_seq_list:
+            frame_regex = re.compile('[0-9]+.')
+            new_image_name = frame_regex.sub('{}.'.format(padding % (same_seq_list.index(image)+1)), image)
+            if dry_run:
+                print('{} -> {}'.format(image, new_image_name))
+            else:
+                os.rename(image, new_image_name)
+
+def parse_args():
+    description = 'Re-numbering sequences of images with given path.'
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument('path_to_images', type=str, help='The image path to search for the sequences')
+    parser.add_argument('-dr', '--dryrun', dest='dry_run', default=False, action='store_true',
+                        help='Use this to test before running')
+    args = parser.parse_args()
+
+    return args
+
+def main():
+    args = parse_args()
+
+    input_path = args.path_to_images
+    dry_run = args.dry_run
+
+    rename_files(input_path, dry_run)
+
+if __name__ == '__main__':
+    main()

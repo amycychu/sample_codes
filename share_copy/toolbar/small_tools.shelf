@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shelfDocument>
+  <!-- This file contains definitions of shelves, toolbars, and tools.
+ It should not be hand-edited when it is being used by the application.
+ Note, that two definitions of the same element are not allowed in
+ a single file. -->
+
+  <tool name="share_copy" label="Share Copy" icon="PLASMA_App">
+    <helpText><![CDATA[Copy selected nodes including network items to share folder.]]></helpText>
+    <script scriptType="python"><![CDATA[import share_copy.share_copy as share_copy
+reload(share_copy)
+
+share_copy.share_copy()
+]]></script>
+  </tool>
+
+  <tool name="share_paste" label="Share Paste" icon="PLASMA_App">
+    <helpText><![CDATA[Paste the selected shared item to the pane category.]]></helpText>
+    <script scriptType="python"><![CDATA[import share_copy.share_copy as share_copy
+
+reload(share_copy)
+
+def main():
+    share_paste_dialog = share_copy.SharePasteDialog()
+    share_paste_dialog.show()
+
+main()]]></script>
+  </tool>
+
+</shelfDocument>
