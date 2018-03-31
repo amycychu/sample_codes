@@ -1,6 +1,5 @@
 # Built-in
 import os
-import hou
 import time
 import math
 
@@ -42,9 +41,6 @@ QT_WARNING_COLOR = QtGui.QColor(220, 10, 10)
 SHARE_DIR = "/var/tmp/houdini/share/"
 #SHARE_DIR = "F:/coding/test/"
 
-CATEGORIES = ("Object", "Sop", "Shop", "ChopNet", "Chop", "CopNet", "Cop2", "VopNet", "Vop", "Driver")
-COMMON_NAMES = ("Obj", "Sop", "Shop", "ChopNet", "Chop", "CopNet", "Cop", "VopNet", "Vop", "Rop")
-
 CATEGORY_TRANSLATE = {
    "Object": "Obj",
    "Driver": "Rop",
@@ -70,7 +66,7 @@ def parent_hou(widget):
 
 def share_copy():
     """
-    Get the selected nodes and network items and save them as cpio file to 
+    Get the selected nodes and network items and save them as cpio file to
     the share directory
     """
     items = hou.selectedItems(True)
@@ -212,13 +208,12 @@ class SharePasteWidget(QtWidgets.QDialog, BaseWidget):
 
     def get_destination(self):
         """
-        Get user's current pane as the paste destination
+        Get user's current NetworkEditor pane as the paste destination
         """
         pane_list = hou.ui.currentPaneTabs()
-
-        for p in range(0, len(pane_list)):
-            if pane_list[p].type() == hou.paneTabType.NetworkEditor and pane_list[p].isCurrentTab():
-                destination = pane_list[p].pwd()
+        for pane in pane_list:
+            if pane.type() == hou.paneTabType.NetworkEditor and pane.isCurrentTab():
+                destination = pane.pwd()
                 return destination
 
     def get_share_files(self):
@@ -241,16 +236,18 @@ class SharePasteWidget(QtWidgets.QDialog, BaseWidget):
         new_list.sort(key=lambda entry: entry["age"])
 
         paste_list = []
-        for i in range(0, len(new_list)):
-            (username, cat) = new_list[i]["item"].split(".")[0].split("_")
+
+        for shared_item in new_list:
+            (username, cat) = shared_item.get("item").split(".")[0].split("_")
             if cat == paste_category_type:
                 if cat in CATEGORY_TRANSLATE:
                     cat = CATEGORY_TRANSLATE[cat]
-
-                formatted_age = self.format_age(new_list[i]["age"])
+                formatted_age = self.format_age(shared_item.get("age"))
+                # the display name is refomatted to example like:
+                # 'amychu: Rop (7 minutes)'
                 name = "{0}: {1} ({2})".format(username, cat, formatted_age)
                 paste_list.append(name)
-                self.remap[name] = new_list[i]["item"]
+                self.remap[name] = shared_item.get("item")
 
         return paste_list
 
